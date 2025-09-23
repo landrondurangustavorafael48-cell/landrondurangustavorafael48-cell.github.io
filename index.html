@@ -8,6 +8,9 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <style>
     body { font-family: system-ui, sans-serif; }
   </style>
@@ -18,79 +21,103 @@
   <script type="text/babel">
     const { useState, useEffect } = React;
 
+    // 🔥 Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyB_cMhpwH7hKN2o2sXKRFshXKrGccqxX84",
+      authDomain: "contador-global-inges.firebaseapp.com",
+      databaseURL: "https://contador-global-inges-default-rtdb.firebaseio.com",
+      projectId: "contador-global-inges",
+      storageBucket: "contador-global-inges.firebasestorage.app",
+      messagingSenderId: "224301993482",
+      appId: "1:224301993482:web:4c13aec367de2b7d8999f3"
+    };
+
+    // Inicializar Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const database = firebase.database();
+
     function App() {
       const [selectedCategory, setSelectedCategory] = useState("colors");
       const [speaking, setSpeaking] = useState(null);
       const [visitCount, setVisitCount] = useState(0);
       const [loading, setLoading] = useState(true);
 
+      // 🔥 Contador global con Firebase
       useEffect(() => {
-        const savedCount = localStorage.getItem('visitCount');
-        if (savedCount) {
-          setVisitCount(parseInt(savedCount) + 1);
-          localStorage.setItem('visitCount', (parseInt(savedCount) + 1).toString());
-        } else {
-          setVisitCount(1);
-          localStorage.setItem('visitCount', '1');
-        }
-        setLoading(false);
+        const visitsRef = database.ref('visits');
+        
+        // Obtener el conteo actual
+        visitsRef.once('value', (snapshot) => {
+          let count = snapshot.val() || 0;
+          setVisitCount(count);
+          setLoading(false);
+        });
+
+        // Incrementar el conteo
+        visitsRef.transaction((current) => {
+          return (current || 0) + 1;
+        });
       }, []);
 
       const vocabulary = {
         colors: [
-          { english: "Red", spanish: "Rojo", color: "bg-red-500", pronunciation: "red" },
-          { english: "Orange", spanish: "Naranja", color: "bg-orange-500", pronunciation: "or-inj" },
-          { english: "Yellow", spanish: "Amarillo", color: "bg-yellow-500", pronunciation: "yel-oh" },
-          { english: "Green", spanish: "Verde", color: "bg-green-500", pronunciation: "green" },
-          { english: "Blue", spanish: "Azul", color: "bg-blue-500", pronunciation: "bloo" },
-          { english: "Indigo", spanish: "Índigo", color: "bg-indigo-500", pronunciation: "in-di-go" },
-          { english: "Violet", spanish: "Violeta", color: "bg-purple-500", pronunciation: "vy-uh-let" },
+          { english: "Red", spanish: "Rojo", color: "bg-red-500", pronunciation: "red", image: "https://placehold.co/100x100/red/white?text=🔴" },
+          { english: "Orange", spanish: "Naranja", color: "bg-orange-500", pronunciation: "or-inj", image: "https://placehold.co/100x100/orange/white?text=🟠" },
+          { english: "Yellow", spanish: "Amarillo", color: "bg-yellow-500", pronunciation: "yel-oh", image: "https://placehold.co/100x100/yellow/black?text=🟡" },
+          { english: "Green", spanish: "Verde", color: "bg-green-500", pronunciation: "green", image: "https://placehold.co/100x100/green/white?text=🟢" },
+          { english: "Blue", spanish: "Azul", color: "bg-blue-500", pronunciation: "bloo", image: "https://placehold.co/100x100/blue/white?text=🔵" },
+          { english: "Indigo", spanish: "Índigo", color: "bg-indigo-500", pronunciation: "in-di-go", image: "https://placehold.co/100x100/indigo/white?text=🟣" },
+          { english: "Violet", spanish: "Violeta", color: "bg-purple-500", pronunciation: "vy-uh-let", image: "https://placehold.co/100x100/purple/white?text=🟣" },
         ],
         numbers: [
-          { english: "One", spanish: "Uno", color: "bg-pink-500", pronunciation: "wun" },
-          { english: "Two", spanish: "Dos", color: "bg-red-500", pronunciation: "too" },
-          { english: "Three", spanish: "Tres", color: "bg-orange-500", pronunciation: "three" },
-          { english: "Four", spanish: "Cuatro", color: "bg-yellow-500", pronunciation: "for" },
-          { english: "Five", spanish: "Cinco", color: "bg-green-500", pronunciation: "fiv" },
-          { english: "Six", spanish: "Seis", color: "bg-blue-500", pronunciation: "siks" },
-          { english: "Seven", spanish: "Siete", color: "bg-indigo-500", pronunciation: "sev-en" },
-          { english: "Eight", spanish: "Ocho", color: "bg-purple-500", pronunciation: "eit" },
-          { english: "Nine", spanish: "Nueve", color: "bg-pink-500", pronunciation: "nain" },
-          { english: "Ten", spanish: "Diez", color: "bg-red-500", pronunciation: "ten" },
+          { english: "One", spanish: "Uno", color: "bg-pink-500", pronunciation: "wun", image: "https://placehold.co/100x100/pink/white?text=1️⃣" },
+          { english: "Two", spanish: "Dos", color: "bg-red-500", pronunciation: "too", image: "https://placehold.co/100x100/red/white?text=2️⃣" },
+          { english: "Three", spanish: "Tres", color: "bg-orange-500", pronunciation: "three", image: "https://placehold.co/100x100/orange/white?text=3️⃣" },
+          { english: "Four", spanish: "Cuatro", color: "bg-yellow-500", pronunciation: "for", image: "https://placehold.co/100x100/yellow/black?text=4️⃣" },
+          { english: "Five", spanish: "Cinco", color: "bg-green-500", pronunciation: "fiv", image: "https://placehold.co/100x100/green/white?text=5️⃣" },
+          { english: "Six", spanish: "Seis", color: "bg-blue-500", pronunciation: "siks", image: "https://placehold.co/100x100/blue/white?text=6️⃣" },
+          { english: "Seven", spanish: "Siete", color: "bg-indigo-500", pronunciation: "sev-en", image: "https://placehold.co/100x100/indigo/white?text=7️⃣" },
+          { english: "Eight", spanish: "Ocho", color: "bg-purple-500", pronunciation: "eit", image: "https://placehold.co/100x100/purple/white?text=8️⃣" },
+          { english: "Nine", spanish: "Nueve", color: "bg-pink-500", pronunciation: "nain", image: "https://placehold.co/100x100/pink/white?text=9️⃣" },
+          { english: "Ten", spanish: "Diez", color: "bg-red-500", pronunciation: "ten", image: "https://placehold.co/100x100/red/white?text=🔟" },
         ],
         animals: [
-          { english: "Dog", spanish: "Perro", color: "bg-yellow-500", pronunciation: "dog" },
-          { english: "Cat", spanish: "Gato", color: "bg-orange-500", pronunciation: "kat" },
-          { english: "Bird", spanish: "Pájaro", color: "bg-blue-500", pronunciation: "berd" },
-          { english: "Fish", spanish: "Pez", color: "bg-indigo-500", pronunciation: "fish" },
-          { english: "Horse", spanish: "Caballo", color: "bg-amber-700", pronunciation: "hors" },
-          { english: "Cow", spanish: "Vaca", color: "bg-gray-200 text-gray-800", pronunciation: "kau" },
-          { english: "Rabbit", spanish: "Conejo", color: "bg-gray-100 text-gray-800", pronunciation: "ra-bit" },
+          { english: "Dog", spanish: "Perro", color: "bg-yellow-500", pronunciation: "dog", image: "https://placehold.co/100x100/amber/white?text=🐶" },
+          { english: "Cat", spanish: "Gato", color: "bg-orange-500", pronunciation: "kat", image: "https://placehold.co/100x100/orange/white?text=🐱" },
+          { english: "Bird", spanish: "Pájaro", color: "bg-blue-500", pronunciation: "berd", image: "https://placehold.co/100x100/blue/white?text=🐦" },
+          { english: "Fish", spanish: "Pez", color: "bg-indigo-500", pronunciation: "fish", image: "https://placehold.co/100x100/indigo/white?text=🐟" },
+          { english: "Horse", spanish: "Caballo", color: "bg-amber-700", pronunciation: "hors", image: "https://placehold.co/100x100/amber/white?text=🐴" },
+          { english: "Cow", spanish: "Vaca", color: "bg-gray-200 text-gray-800", pronunciation: "kau", image: "https://placehold.co/100x100/gray/white?text=🐄" },
+          { english: "Rabbit", spanish: "Conejo", color: "bg-gray-100 text-gray-800", pronunciation: "ra-bit", image: "https://placehold.co/100x100/gray/white?text=🐰" },
         ],
         food: [
-          { english: "Apple", spanish: "Manzana", color: "bg-red-500", pronunciation: "a-pul" },
-          { english: "Banana", spanish: "Plátano", color: "bg-yellow-500", pronunciation: "buh-na-nuh" },
-          { english: "Bread", spanish: "Pan", color: "bg-amber-600", pronunciation: "bred" },
-          { english: "Milk", spanish: "Leche", color: "bg-white text-gray-800 border border-gray-300", pronunciation: "milk" },
-          { english: "Water", spanish: "Agua", color: "bg-cyan-400", pronunciation: "wo-ter" },
-          { english: "Cheese", spanish: "Queso", color: "bg-yellow-300 text-gray-800", pronunciation: "chiz" },
-          { english: "Egg", spanish: "Huevo", color: "bg-amber-100 text-gray-800 border border-amber-300", pronunciation: "eg" },
+          { english: "Apple", spanish: "Manzana", color: "bg-red-500", pronunciation: "a-pul", image: "https://placehold.co/100x100/red/white?text=🍎" },
+          { english: "Banana", spanish: "Plátano", color: "bg-yellow-500", pronunciation: "buh-na-nuh", image: "https://placehold.co/100x100/yellow/black?text=🍌" },
+          { english: "Bread", spanish: "Pan", color: "bg-amber-600", pronunciation: "bred", image: "https://placehold.co/100x100/amber/white?text=🍞" },
+          { english: "Milk", spanish: "Leche", color: "bg-white text-gray-800 border border-gray-300", pronunciation: "milk", image: "https://placehold.co/100x100/white/black?text=🥛" },
+          { english: "Water", spanish: "Agua", color: "bg-cyan-400", pronunciation: "wo-ter", image: "https://placehold.co/100x100/cyan/white?text=💧" },
+          { english: "Cheese", spanish: "Queso", color: "bg-yellow-300 text-gray-800", pronunciation: "chiz", image: "https://placehold.co/100x100/yellow/black?text=🧀" },
+          { english: "Egg", spanish: "Huevo", color: "bg-amber-100 text-gray-800 border border-amber-300", pronunciation: "eg", image: "https://placehold.co/100x100/amber/white?text=🥚" },
         ],
-       days: [
-    { english: "Sunday", spanish: "Domingo", color: "bg-red-500", pronunciation: "suhn-dee" },
-    { english: "Monday", spanish: "Lunes", color: "bg-orange-500", pronunciation: "muhn-dee" },
-    { english: "Tuesday", spanish: "Martes", color: "bg-yellow-500", pronunciation: "tyooz-dee" },
-    { english: "Wednesday", spanish: "Miércoles", color: "bg-green-500", pronunciation: "wenz-dee" },
-    { english: "Thursday", spanish: "Jueves", color: "bg-blue-500", pronunciation: "thurz-dee" },
-    { english: "Friday", spanish: "Viernes", color: "bg-indigo-500", pronunciation: "fry-dee" },
-    { english: "Saturday", spanish: "Sábado", color: "bg-purple-500", pronunciation: "sa-ter-dee" },
-  ] };
+        days: [
+          { english: "Sunday", spanish: "Domingo", color: "bg-red-500", pronunciation: "suhn-dee", image: "https://placehold.co/100x100/red/white?text=☀️" },
+          { english: "Monday", spanish: "Lunes", color: "bg-orange-500", pronunciation: "muhn-dee", image: "https://placehold.co/100x100/orange/white?text=🌙" },
+          { english: "Tuesday", spanish: "Martes", color: "bg-yellow-500", pronunciation: "tyooz-dee", image: "https://placehold.co/100x100/yellow/black?text=⭐" },
+          { english: "Wednesday", spanish: "Miércoles", color: "bg-green-500", pronunciation: "wenz-dee", image: "https://placehold.co/100x100/green/white?text=🌿" },
+          { english: "Thursday", spanish: "Jueves", color: "bg-blue-500", pronunciation: "thurz-dee", image: "https://placehold.co/100x100/blue/white?text=🌧️" },
+          { english: "Friday", spanish: "Viernes", color: "bg-indigo-500", pronunciation: "fry-dee", image: "https://placehold.co/100x100/indigo/white?text=🎉" },
+          { english: "Saturday", spanish: "Sábado", color: "bg-purple-500", pronunciation: "sa-ter-dee", image: "https://placehold.co/100x100/purple/white?text=🎈" },
+        ],
+      };
 
       const categories = [
         { id: "colors", name: "Colores", icon: "🌈" },
         { id: "numbers", name: "Números", icon: "🔢" },
         { id: "animals", name: "Animales", icon: "🐶" },
         { id: "food", name: "Comida", icon: "🍎" },
+        { id: "days", name: "Días", icon: "📅" },
       ];
 
       const speakWord = (word, index) => {
@@ -173,6 +200,7 @@
                   key={index}
                   className={`${item.color} rounded-xl p-6 text-center shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl relative`}
                 >
+                  <img src={item.image} alt={item.english} className="w-24 h-24 mx-auto mb-4 rounded-full" />
                   <div className="text-3xl font-bold mb-1 text-white">{item.english}</div>
                   <div className="text-lg opacity-90 text-white mb-2">{item.spanish}</div>
                   <div className="text-sm italic opacity-80 text-white mb-3">/{item.pronunciation}/</div>
@@ -228,10 +256,4 @@
     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
   </script>
 </body>
-
 </html>
-
-
-
-
-
